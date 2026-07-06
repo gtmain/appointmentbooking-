@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Desk — Appointment Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14161B;
+    --panel:#1B1F27;
+    --panel-2:#20242E;
+    --paper:#EFE9DC;
+    --paper-line:#D8CFBA;
+    --orange:#FF6A33;
+    --orange-dim:#7a3d24;
+    --green:#2FBF83;
+    --green-dim:#1f5c47;
+    --red:#E4483F;
+    --text:#ECE8DF;
+    --text-dark:#1C1B18;
+    --muted:#8B92A0;
+    --border:#2E3340;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.04em;}
+
+  header.top{
+    padding:22px 20px 0;
+    max-width:920px;
+    margin:0 auto;
+  }
+  header.top .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  header.top h1{
+    font-size:22px;
+    margin:0;
+    font-weight:700;
+  }
+  header.top .brand span.tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.08em;
+  }
+  header.top p.sub{
+    margin:4px 0 18px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    max-width:920px;
+    margin:0 auto;
+    padding:0 20px;
+    border-bottom:1px solid var(--border);
+  }
+  nav.tabs button{
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-size:13px;
+    font-weight:600;
+    padding:12px 14px 14px;
+    cursor:pointer;
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  nav.tabs button .stage{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--muted);
+    border:1px solid var(--border);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+  nav.tabs button.active{color:var(--text);}
+  nav.tabs button.active .stage{color:var(--orange);border-color:var(--orange);}
+  nav.tabs button.active::after{
+    content:"";
+    position:absolute;
+    left:14px;right:14px;bottom:-1px;
+    height:2px;
+    background:var(--orange);
+  }
+  nav.tabs button:hover{color:var(--text);}
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:22px 20px 80px;
+  }
+  section.panel{display:none;}
+  section.panel.active{display:block;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px;
+  }
+  .card + .card{margin-top:16px;}
+
+  h2.section-title{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-size:15px;
+    margin:0 0 16px;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  h2.section-title .count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--ink);
+    background:var(--orange);
+    padding:1px 7px;
+    border-radius:20px;
+    font-weight:600;
+  }
+  h2.section-title .count.green{background:var(--green);}
+
+  form.book-form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  form.book-form .full{grid-column:1 / -1;}
+  @media (max-width:600px){
+    form.book-form{grid-template-columns:1fr;}
+  }
+  label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  input, select, textarea{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:6px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  input.mono-field, select.mono-field{font-family:'JetBrains Mono',monospace;}
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--orange);
+    outline-offset:1px;
+    border-color:var(--orange);
+  }
+  select{appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238B92A0'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:30px;
+  }
+
+  button.btn{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-weight:600;
+    font-size:13px;
+    border:none;
+    border-radius:6px;
+    padding:11px 20px;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease;
+  }
+  button.btn:active{transform:scale(0.97);}
+  button.btn.primary{background:var(--orange);color:#1a0d05;}
+  button.btn.primary:hover{filter:brightness(1.08);}
+  button.btn.ghost{background:none;border:1px solid var(--border);color:var(--text);}
+  button.btn.ghost:hover{border-color:var(--orange);color:var(--orange);}
+  button.btn.approve{background:var(--green);color:#04241a;}
+  button.btn.approve:hover{filter:brightness(1.1);}
+  button.btn.danger{background:none;border:1px solid var(--red);color:var(--red);}
+  button.btn.danger:hover{background:var(--red);color:#fff;}
+  button.btn.small{padding:7px 13px;font-size:11px;}
+  button.btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:10px;margin-top:4px;}
+
+  .msg{
+    margin-top:14px;
+    padding:10px 14px;
+    border-radius:6px;
+    font-size:13px;
+    display:none;
+  }
+  .msg.show{display:block;}
+  .msg.error{background:rgba(228,72,63,0.12);border:1px solid var(--red);color:#ffb3af;}
+  .msg.ok{background:rgba(47,191,131,0.12);border:1px solid var(--green);color:#a9f0d3;}
+
+  /* --- Job docket ticket --- */
+  .docket{
+    display:flex;
+    background:var(--paper);
+    color:var(--text-dark);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.25);
+  }
+  .docket .stub{
+    background:#E3DCC9;
+    padding:16px 14px;
+    width:110px;
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    border-right:2px dashed #B9AE93;
+    position:relative;
+  }
+  .docket .stub .d-day{font-family:'Oswald';font-size:26px;font-weight:700;line-height:1;}
+  .docket .stub .d-mon{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.08em;margin-top:2px;}
+  .docket .stub .d-time{font-family:'JetBrains Mono';font-size:12px;margin-top:8px;color:#5a5644;font-weight:600;}
+  .docket .stub::before, .docket .stub::after{
+    content:"";
+    position:absolute;
+    width:14px;height:14px;
+    background:var(--panel);
+    border-radius:50%;
+    right:-8px;
+  }
+  .docket .stub::before{top:-7px;}
+  .docket .stub::after{bottom:-7px;}
+
+  .docket .body{
+    flex:1;
+    padding:14px 16px;
+    position:relative;
+  }
+  .docket .body .row1{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .docket .body .name{font-family:'Oswald';font-size:16px;font-weight:600;}
+  .docket .body .service{
+    font-family:'JetBrains Mono';
+    font-size:10.5px;
+    text-transform:uppercase;
+    color:#5a5644;
+    background:#e2d9bf;
+    padding:2px 8px;
+    border-radius:20px;
+    display:inline-block;
+    margin-top:4px;
+  }
+  .docket .body .meta{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px 14px;
+    margin-top:10px;
+    font-family:'JetBrains Mono';
+    font-size:12px;
+    color:#4b4738;
+  }
+  .docket .body .meta span.k{color:#8a8267;margin-right:4px;}
+  .docket .body .actions{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .stamp{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border:2px solid;
+    border-radius:4px;
+    transform:rotate(-6deg);
+    display:inline-block;
+  }
+  .stamp.pending{color:var(--orange);border-color:var(--orange);}
+  .stamp.approved{color:var(--green);border-color:var(--green);}
+  .missed-note{font-family:'JetBrains Mono';font-size:11px;color:var(--red);margin-top:6px;}
+
+  .reschedule-box{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed #B9AE93;
+    display:none;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .reschedule-box.open{display:flex;}
+  .reschedule-box input{width:auto;font-size:13px;padding:8px 10px;}
+
+  .sub-nav{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .sub-nav button{
+    font-family:'Oswald';
+    text-transform:uppercase;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:8px 14px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .sub-nav button.active{
+    color:var(--ink);
+    background:var(--orange);
+    border-color:var(--orange);
+  }
+  .sub-nav button.active.green{background:var(--green);}
+
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .empty .big{font-family:'Oswald';font-size:15px;color:var(--text);margin-bottom:6px;}
+
+  /* All records table */
+  .table-wrap{overflow-x:auto;}
+  table.records{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  table.records th{
+    text-align:left;
+    padding:9px 10px;
+    color:var(--muted);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  table.records td{
+    padding:9px 10px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  table.records tr:hover td{background:var(--panel-2);}
+  .badge{
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:10.5px;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .badge.pending{background:rgba(255,106,51,0.15);color:var(--orange);}
+  .badge.approved{background:rgba(47,191,131,0.15);color:var(--green);}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .toolbar input, .toolbar select{width:auto;flex:1;min-width:140px;}
+
+  .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .refresh-row .stat{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+
+  footer.credit{
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+    padding:20px;
+    font-family:'JetBrains Mono';
+  }
+
+  .spin{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid var(--border);border-top-color:var(--orange);
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>Job Desk</h1>
+    <span class="tag">// APPOINTMENT & SERVICE TRACKER</span>
+  </div>
+  <p class="sub">Book, track, and close out service appointments.</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="book"><span class="stage">01</span> Appointment Book</button>
+  <button class="tab-btn" data-tab="list"><span class="stage">02</span> Appointment List</button>
+  <button class="tab-btn" data-tab="records"><span class="stage">03</span> All Records</button>
+</nav>
+
+<main>
+
+  <!-- TAB 1: APPOINTMENT BOOK -->
+  <section class="panel active" id="panel-book">
+    <div class="card">
+      <h2 class="section-title">New Appointment</h2>
+      <form class="book-form" id="bookForm">
+        <div>
+          <label for="f-name">Name</label>
+          <input type="text" id="f-name" required placeholder="Customer name">
+        </div>
+        <div>
+          <label for="f-reg">Registration No.</label>
+          <input type="text" id="f-reg" class="mono-field" required placeholder="e.g. KA-05-AB-1234">
+        </div>
+        <div>
+          <label for="f-contact">Contact No.</label>
+          <input type="tel" id="f-contact" class="mono-field" required placeholder="10-digit number">
+        </div>
+        <div>
+          <label for="f-chassis">Chassis No.</label>
+          <input type="text" id="f-chassis" class="mono-field" placeholder="Chassis / VIN">
+        </div>
+        <div>
+          <label for="f-datetime">Appointment Date & Time</label>
+          <input type="datetime-local" id="f-datetime" required>
+        </div>
+        <div>
+          <label for="f-service">Service Type</label>
+          <select id="f-service" required>
+            <option value="">Select…</option>
+            <option>Free Service - 1</option>
+            <option>Free Service - 2</option>
+            <option>Free Service - 3</option>
+            <option>Free Service - 4</option>
+            <option>Paid Service</option>
+            <option>Accident Repair</option>
+            <option>Quick / Minor Repair</option>
+            <option>Others</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="f-notes">Notes (optional)</label>
+          <textarea id="f-notes" rows="2" placeholder="Any additional notes"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="reset" class="btn ghost">Clear</button>
+          <button type="submit" class="btn primary" id="bookSubmitBtn">Save Appointment</button>
+        </div>
+      </form>
+      <div class="msg" id="bookMsg"></div>
+    </div>
+  </section>
+
+  <!-- TAB 2: APPOINTMENT LIST -->
+  <section class="panel" id="panel-list">
+    <div class="sub-nav">
+      <button class="sub-tab-btn active" data-sub="pending">Pending List</button>
+      <button class="sub-tab-btn green" data-sub="approved">Approved List (Service Completed)</button>
+    </div>
+
+    <div id="sub-pending">
+      <h2 class="section-title">Pending <span class="count" id="pendingCount">0</span></h2>
+      <div id="pendingList"></div>
+    </div>
+
+    <div id="sub-approved" style="display:none;">
+      <h2 class="section-title">Approved / Completed <span class="count green" id="approvedCount">0</span></h2>
+      <div id="approvedList"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: ALL RECORDS -->
+  <section class="panel" id="panel-records">
+    <div class="refresh-row">
+      <h2 class="section-title" style="margin:0;">All Records in Database</h2>
+      <button class="btn ghost small" id="refreshBtn">Refresh</button>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search name, reg no, chassis, contact…">
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table class="records" id="recordsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Reg No.</th>
+              <th>Contact</th>
+              <th>Chassis No.</th>
+              <th>Appointment</th>
+              <th>Service Type</th>
+              <th>Status</th>
+              <th>Missed</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="recordsEmpty" style="display:none;">
+        <div class="big">No matching records</div>
+        Try clearing the search or filter.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="credit">JOB DESK · connected to Supabase</footer>
+
+<script>
+  const SUPABASE_URL = "https://mudzlrxlltoailcmvafs.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11ZHpscnhsbHRvYWlsY212YWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NjA0NjIsImV4cCI6MjA5ODAzNjQ2Mn0.lDqxahxVe5wx6l98baD6qxXZtqg-ZthLfs1aD3pkdgE";
+  const TABLE = "appointments";
+  const REST = `${SUPABASE_URL}/rest/v1/${TABLE}`;
+
+  const baseHeaders = {
+    "apikey": SUPABASE_ANON_KEY,
+    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json"
+  };
+
+  let allRows = [];
+
+  // ---------- Tab switching ----------
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
+      if (btn.dataset.tab === "list" || btn.dataset.tab === "records") loadAppointments();
+    });
+  });
+
+  document.querySelectorAll(".sub-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".sub-tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("sub-pending").style.display = btn.dataset.sub === "pending" ? "block" : "none";
+      document.getElementById("sub-approved").style.display = btn.dataset.sub === "approved" ? "block" : "none";
+    });
+  });
+
+  // ---------- Helpers ----------
+  function showMsg(el, text, type){
+    el.textContent = text;
+    el.className = `msg show ${type}`;
+    setTimeout(() => el.classList.remove("show"), 4500);
+  }
+
+  function fmtDate(iso){
+    const d = new Date(iso);
+    return {
+      day: d.toLocaleDateString(undefined, {day:"2-digit"}),
+      mon: d.toLocaleDateString(undefined, {month:"short"}).toUpperCase(),
+      time: d.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"}),
+      full: d.toLocaleString(undefined, {dateStyle:"medium", timeStyle:"short"})
+    };
+  }
+
+  function escapeHtml(str){
+    if (str === null || str === undefined) return "";
+    return String(str).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // ---------- Create ----------
+  const bookForm = document.getElementById("bookForm");
+  const bookMsg = document.getElementById("bookMsg");
+  const bookSubmitBtn = document.getElementById("bookSubmitBtn");
+
+  bookForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    bookSubmitBtn.disabled = true;
+    bookSubmitBtn.innerHTML = `<span class="spin"></span> Saving…`;
+
+    const payload = {
+      name: document.getElementById("f-name").value.trim(),
+      registration_no: document.getElementById("f-reg").value.trim(),
+      contact_no: document.getElementById("f-contact").value.trim(),
+      chassis_no: document.getElementById("f-chassis").value.trim(),
+      appointment_at: new Date(document.getElementById("f-datetime").value).toISOString(),
+      service_type: document.getElementById("f-service").value,
+      notes: document.getElementById("f-notes").value.trim() || null,
+      status: "pending"
+    };
+
+    try {
+      const res = await fetch(REST, {
+        method: "POST",
+        headers: { ...baseHeaders, "Prefer": "return=representation" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      showMsg(bookMsg, "Appointment saved. Find it under the Pending List.", "ok");
+      bookForm.reset();
+      loadAppointments();
+    } catch (err) {
+      console.error(err);
+      showMsg(bookMsg, "Couldn't save the appointment. Make sure the database table has been created (see setup.sql) and try again.", "error");
+    } finally {
+      bookSubmitBtn.disabled = false;
+      bookSubmitBtn.textContent = "Save Appointment";
+    }
+  });
+
+  // ---------- Load ----------
+  async function loadAppointments(){
+    try {
+      const res = await fetch(`${REST}?select=*&order=appointment_at.asc`, { headers: baseHeaders });
+      if (!res.ok) throw new Error(await res.text());
+      allRows = await res.json();
+      renderPending();
+      renderApproved();
+      renderRecords();
+    } catch (err) {
+      console.error(err);
+      document.getElementById("pendingList").innerHTML =
+        `<div class="empty"><div class="big">Couldn't load data</div>Check that setup.sql has been run on your Supabase project.</div>`;
+    }
+  }
+
+  // ---------- Render: Pending ----------
+  function renderPending(){
+    const rows = allRows.filter(r => r.status === "pending");
+    document.getElementById("pendingCount").textContent = rows.length;
+    const container = document.getElementById("pendingList");
+
+    if (!rows.length){
+      container.innerHTML = `<div class="empty"><div class="big">No pending appointments</div>New bookings will appear here.</div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map(r => {
+      const d = fmtDate(r.appointment_at);
+      const missedNote = r.missed_count > 0
+        ? `<div class="missed-note">Missed ${r.missed_count} time${r.missed_count > 1 ? "s" : ""} · rescheduled</div>` : "";
+      return `
+      <div class="docket" data-id="${r.id}">
+        <div class="stub">
+          <div class="d-day">${d.day}</div>
+          <div class="d-mon">${d.mon}</div>
+          <div class="d-time">${d.time}</div>
+        </div>
+        <div class="body">
+          <div class="row1">
+            <div>
+              <div class="name">${escapeHtml(r.name)}</div>
+              <div class="service">${escapeHtml(r.service_type)}</div>
+            </div>
+            <div class="stamp pending">Pending</div>
+          </div>
+          <div class="meta">
+            <div><span class="k">REG</span>${escapeHtml(r.registration_no || "—")}</div>
+            <div><span class="k">TEL</span>${escapeHtml(r.contact_no || "—")}</div>
+            <div><span class="k">CHASSIS</span>${escapeHtml(r.chassis_no || "—")}</div>
+          </div>
+          ${missedNote}
+          <div class="actions">
+            <button class="btn approve small" onclick="markApproved('${r.id}')">Mark Approved</button>
+            <button class="btn ghost small" onclick="toggleReschedule('${r.id}')">Missed → Reschedule</button>
+            <button class="btn danger small" onclick="deleteRow('${r.id}')">Delete</button>
+          </div>
+          <div class="reschedule-box" id="resched-${r.id}">
+            <input type="datetime-local" id="resched-input-${r.id}">
+            <button class="btn primary small" onclick="saveReschedule('${r.id}')">Save New Date</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ---------- Render: Approved ----------
+  function renderApproved(){
+    const rows = allRows.filter(r => r.status === "approved")
+      .sort((a,b) => new Date(b.appointment_at) - new Date(a.appointment_at));
+    document.getElementById("approvedCount").textContent = rows.length;
+    const container = document.getElementById("approvedList");
+
+    if (!rows.length){
+      container.innerHTML = `<div class="empty"><div class="big">Nothing completed yet</div>Appointments you approve will show up here.</div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map(r => {
+      const d = fmtDate(r.appointment_at);
+      return `
+      <div class="docket" data-id="${r.id}">
+        <div class="stub">
+          <div class="d-day">${d.day}</div>
+          <div class="d-mon">${d.mon}</div>
+          <div class="d-time">${d.time}</div>
+        </div>
+        <div class="body">
+          <div class="row1">
+            <div>
+              <div class="name">${escapeHtml(r.name)}</div>
+              <div class="service">${escapeHtml(r.service_type)}</div>
+            </div>
+            <div class="stamp approved">Approved</div>
+          </div>
+          <div class="meta">
+            <div><span class="k">REG</span>${escapeHtml(r.registration_no || "—")}</div>
+            <div><span class="k">TEL</span>${escapeHtml(r.contact_no || "—")}</div>
+            <div><span class="k">CHASSIS</span>${escapeHtml(r.chassis_no || "—")}</div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost small" onclick="markPending('${r.id}')">Revert to Pending</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ---------- Render: All Records ----------
+  function renderRecords(){
+    const search = document.getElementById("searchBox").value.toLowerCase();
+    const statusFilter = document.getElementById("statusFilter").value;
+
+    let rows = [...allRows].sort((a,b) => new Date(b.appointment_at) - new Date(a.appointment_at));
+
+    if (statusFilter) rows = rows.filter(r => r.status === statusFilter);
+    if (search){
+      rows = rows.filter(r =>
+        [r.name, r.registration_no, r.contact_no, r.chassis_no].some(v => (v||"").toLowerCase().includes(search))
+      );
+    }
+
+    const tbody = document.getElementById("recordsBody");
+    const empty = document.getElementById("recordsEmpty");
+
+    if (!rows.length){
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.registration_no || "—")}</td>
+        <td>${escapeHtml(r.contact_no || "—")}</td>
+        <td>${escapeHtml(r.chassis_no || "—")}</td>
+        <td>${fmtDate(r.appointment_at).full}</td>
+        <td>${escapeHtml(r.service_type)}</td>
+        <td><span class="badge ${r.status}">${r.status}</span></td>
+        <td>${r.missed_count || 0}</td>
+        <td>${fmtDate(r.created_at).full}</td>
+        <td><button class="btn danger small" onclick="deleteRow('${r.id}')">Delete</button></td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("searchBox").addEventListener("input", renderRecords);
+  document.getElementById("statusFilter").addEventListener("change", renderRecords);
+  document.getElementById("refreshBtn").addEventListener("click", loadAppointments);
+
+  // ---------- Actions ----------
+  async function patchRow(id, body){
+    const res = await fetch(`${REST}?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { ...baseHeaders, "Prefer": "return=representation" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  window.markApproved = async function(id){
+    try {
+      await patchRow(id, { status: "approved" });
+      loadAppointments();
+    } catch (err) { console.error(err); alert("Couldn't update status. Please try again."); }
+  };
+
+  window.markPending = async function(id){
+    try {
+      await patchRow(id, { status: "pending" });
+      loadAppointments();
+    } catch (err) { console.error(err); alert("Couldn't update status. Please try again."); }
+  };
+
+  window.toggleReschedule = function(id){
+    const box = document.getElementById(`resched-${id}`);
+    box.classList.toggle("open");
+  };
+
+  window.saveReschedule = async function(id){
+    const input = document.getElementById(`resched-input-${id}`);
+    if (!input.value){ alert("Pick a new date and time first."); return; }
+    const row = allRows.find(r => r.id === id);
+    try {
+      await patchRow(id, {
+        appointment_at: new Date(input.value).toISOString(),
+        missed_count: (row?.missed_count || 0) + 1,
+        status: "pending"
+      });
+      loadAppointments();
+    } catch (err) { console.error(err); alert("Couldn't reschedule. Please try again."); }
+  };
+
+  window.deleteRow = async function(id){
+    if (!confirm("Delete this record permanently?")) return;
+    try {
+      const res = await fetch(`${REST}?id=eq.${id}`, { method: "DELETE", headers: baseHeaders });
+      if (!res.ok) throw new Error(await res.text());
+      loadAppointments();
+    } catch (err) { console.error(err); alert("Couldn't delete. Please try again."); }
+  };
+
+  // ---------- Init ----------
+  loadAppointments();
+</script>
+</body>
+</html>
